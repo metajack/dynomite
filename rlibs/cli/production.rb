@@ -2,6 +2,7 @@ options = {}
 options[:port] = "-dynomite port 11222"
 options[:databases] = ''
 options[:config] = '-dynomite config "config.json"'
+options[:host] = `hostname -s`.chomp
 
 OptionParser.new do |opts|
   opts.banner = "Usage: dynomite start [options]"
@@ -29,7 +30,9 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-cookie = Digest::MD5.hexdigest(options[:cluster] + "NomMxnLNUH8suehhFg2fkXQ4HVdL2ewXwM")
+cookie = options[:nocookie] ? "" : "-setcookie " + Digest::MD5.hexdigest(options[:cluster] + "NomMxnLNUH8suehhFg2fkXQ4HVdL2ewXwM")
+
+nametype = (options[:host].include? '.') ? "name" : "sname"
 
 str = "erl \
   -boot start_sasl \
@@ -41,11 +44,11 @@ str = "erl \
   -pz #{ROOT}/deps/mochiweb/ebin \
   -pz #{ROOT}/deps/rfc4627/ebin \
   -pz #{ROOT}/deps/thrift/ebin \
-  -sname #{options[:name]} \
+  -#{nametype} #{options[:name]}@#{options[:host]} \
   #{options[:log]} \
   #{options[:config]} \
   #{options[:jointo]} \
-  -setcookie #{cookie} \
+  #{cookie} \
   -run dynomite start \  
   #{options[:detached]} \
   #{options[:profile]}"

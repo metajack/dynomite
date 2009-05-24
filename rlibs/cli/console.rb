@@ -2,6 +2,7 @@ options = {}
 options[:port] = 11222
 options[:databases] = ''
 options[:config] = ''
+options[:host] = `hostname -s`.chomp
 
 OptionParser.new do |opts|
   opts.banner = "Usage: dynomite console [options]"
@@ -11,8 +12,10 @@ OptionParser.new do |opts|
 
 end.parse!
 
-cookie = Digest::MD5.hexdigest(options[:cluster] + "NomMxnLNUH8suehhFg2fkXQ4HVdL2ewXwM")
+cookie = options[:nocookie] ? "" : "-setcookie " + Digest::MD5.hexdigest(options[:cluster] + "NomMxnLNUH8suehhFg2fkXQ4HVdL2ewXwM")
 
-str = "erl -sname remsh_#{$$} -remsh #{options[:name]}@#{`hostname -s`.chomp} -hidden -setcookie #{cookie}"
+nametype = (options[:host].include? '.') ? "name" : "sname"
+
+str = "erl -#{nametype} remsh_#{$$}@#{options[:host]} -remsh #{options[:name]}@#{options[:host]} -hidden #{cookie}"
 puts str
 exec str

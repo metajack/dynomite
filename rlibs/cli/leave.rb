@@ -1,4 +1,5 @@
 options = {}
+options[:host] = `hostname -s`.chomp
 
 OptionParser.new do |opts|
   opts.banner = "Usage: dynomite stop [options]"
@@ -7,8 +8,10 @@ OptionParser.new do |opts|
   eval contents
 end.parse!
 
-cookie = Digest::MD5.hexdigest(options[:cluster] + "NomMxnLNUH8suehhFg2fkXQ4HVdL2ewXwM")
+cookie = options[:nocookie] ? "" : "-setcookie " + Digest::MD5.hexdigest(options[:cluster] + "NomMxnLNUH8suehhFg2fkXQ4HVdL2ewXwM")
 
-str = %Q(erl -sname remsh_#{$$} -remsh #{options[:name]}@#{`hostname -s`.chomp} -hidden -setcookie #{cookie}" -noshell -run membership leave)
+nametype = (options[:host].include? '.') ? "name" : "sname"
+
+str = %Q(erl -#{nametype} remsh_#{$$}@#{options[:host]} -remsh #{options[:name]}@#{options[:host]} -hidden #{cookie}" -noshell -run membership leave)
 puts str
 exec str
